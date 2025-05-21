@@ -1,0 +1,13 @@
+http:
+  routers:
+    traefik-dash:
+      rule: Host(`traefik.dimoracosta.it`)
+      entrypoints:
+        - websecure
+      service: api@internal
+      middlewares:
+        - crowdsec-bouncer@file
+        - authentik@file
+        - ratelimiter@file
+      tls:
+        certresolver: cloudflare

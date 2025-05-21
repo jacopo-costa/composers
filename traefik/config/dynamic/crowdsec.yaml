@@ -1,0 +1,11 @@
+http:
+  middlewares:
+    crowdsec-bouncer:
+      plugin:
+        crowdsec-bouncer-traefik-plugin:
+          enabled: true
+          CrowdsecLapiKey: /s/XpFLwjxWcWWpXGiUNFUxJo+wdxX/NdChY/X6TB+Q
+          crowdsecAppsecEnabled: true
+          crowdsecAppsecHost: crowdsec:7422
+          crowdsecAppsecFailureBlock: true
+          crowdsecAppsecUnreachableBlock: true

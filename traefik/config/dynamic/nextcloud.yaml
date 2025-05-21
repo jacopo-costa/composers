@@ -1,0 +1,25 @@
+http:
+  routers:
+    nextcloud:
+      rule: Host(`cloud.dimoracosta.it`)
+      entrypoints:
+        - websecure
+      service: nextcloud
+      middlewares:
+        - crowdsec-bouncer@file
+        - nextcloud-secure-headers
+      tls:
+        certresolver: cloudflare
+
+  services:
+    nextcloud:
+      loadBalancer:
+        servers:
+          - url: http://192.168.100.2:11000
+
+  middlewares:
+    nextcloud-secure-headers:
+      headers:
+        hostsProxyHeaders:
+          - X-Forwarded-Host
+        referrerPolicy: same-origin

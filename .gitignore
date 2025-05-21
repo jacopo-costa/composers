@@ -1,6 +1,32 @@
-composer.phar
-/vendor/
+# Ignore environment variable files
+.env
+.env.*
 
-# Commit your application's lock file https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
-# You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
-# composer.lock
+# Ignore Docker-related files that aren't necessary to track
+**/.DS_Store
+**/docker-compose.override.yml
+**/docker-compose.*.local.yml
+**/docker-compose.*.dev.yml
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.bak
+*.old
+
+# Ignore Python cache, if you use any scripts
+__pycache__/
+*.py[cod]
+
+# VSCode settings (if using VSCode)
+.vscode/
+
+# Node modules (if JS tooling involved)
+node_modules/
+
+# Ignore system files
+Thumbs.db
+.DS_Store

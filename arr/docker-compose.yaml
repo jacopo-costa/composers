@@ -1,0 +1,156 @@
+---
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    mem_reservation: 1g
+    mem_limit: 8g
+    cpus: 4
+    group_add:
+      - "105"
+    networks:
+      - traefik
+    environment:
+      - JELLYFIN_PublishedServerUrl=https://jellyfin.dimoracosta.it
+    volumes:
+      - ./configs/jellyfin/config:/config
+      - ./configs/jellyfin/cache:/cache
+      - /tank/arr/media:/arr/media:ro
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.jellyfin.rule=Host(`jellyfin.dimoracosta.it`)
+      - traefik.http.routers.jellyfin.entrypoints=websecure
+      - traefik.http.routers.jellyfin.tls=true
+      - traefik.http.routers.jellyfin.tls.certResolver=cloudflare
+      - traefik.http.routers.jellyfin.middlewares=crowdsec-bouncer@file
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    restart: unless-stopped
+
+  jellyseerr:
+    image: ghcr.io/fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    mem_reservation: 256m
+    mem_limit: 512m
+    cpus: 0.5
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/Rome
+      - PORT=5055
+    networks:
+      - traefik
+      - arr
+    volumes:
+      - ./configs/jellyseerr:/app/config
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.dimoracosta.it`)
+      - traefik.http.routers.jellyseerr.entrypoints=websecure
+      - traefik.http.routers.jellyseerr.tls=true
+      - traefik.http.routers.jellyseerr.tls.certResolver=cloudflare
+      - traefik.http.routers.jellyseerr.middlewares=crowdsec-bouncer@file
+      - traefik.http.services.jellyseerr.loadbalancer.server.port=5055
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    mem_reservation: 512m
+    mem_limit: 1g
+    cpus: 0.5
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Rome
+      - WEBUI_PORT=8090
+      - TORRENTING_PORT=6881
+    volumes:
+      - ./configs/qbittorrent:/config
+      - /tank/arr/torrents:/arr/torrents
+    networks:
+      - arr
+    ports:
+      - 8090:8090
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    mem_reservation: 256m
+    mem_limit: 512m
+    cpus: 0.5
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Rome
+    volumes:
+      - ./configs/prowlarr:/config
+    networks:
+      - arr
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    mem_reservation: 256m
+    mem_limit: 512m
+    cpus: 0.2
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/Rome
+    networks:
+      - arr
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    mem_reservation: 512m
+    mem_limit: 1g
+    cpus: 0.5
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Rome
+    volumes:
+      - ./configs/radarr:/config
+      - /tank/arr:/arr
+    networks:
+      - arr
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    mem_reservation: 512m
+    mem_limit: 1g
+    cpus: 0.5
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Rome
+    volumes:
+      - ./configs/sonarr:/config
+      - /tank/arr:/arr
+    networks:
+      - arr
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+networks:
+  arr:
+    name: arr
+    external: true
+  traefik:
+    name: traefik
+    external: true

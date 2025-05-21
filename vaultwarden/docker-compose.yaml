@@ -1,0 +1,32 @@
+---
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 0.5
+    restart: unless-stopped
+    environment:
+      - DOMAIN=https://vault.dimoracosta.it
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    volumes:
+      - ./data/:/data/
+    networks:
+      - traefik
+      - authentik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.vaultwarden.rule=Host(`vault.dimoracosta.it`)
+      - traefik.http.routers.vaultwarden.entrypoints=websecure
+      - traefik.http.routers.vaultwarden.tls=true
+      - traefik.http.routers.vaultwarden.tls.certResolver=cloudflare
+      - traefik.http.routers.vaultwarden.middlewares=crowdsec-bouncer@file,authentik@file,ratelimiter@file
+      - traefik.http.services.vaultwarden.loadbalancer.server.port=80
+    
+networks:
+  traefik:
+    external: true
+  authentik:
+    external: true

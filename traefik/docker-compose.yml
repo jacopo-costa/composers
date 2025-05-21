@@ -1,0 +1,50 @@
+---
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    networks:
+      - traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./config/dynamic/:/etc/traefik/dynamic/:ro
+      - ./data/certs/:/var/traefik/certs/:rw
+      - logs:/var/log/traefik
+    restart: unless-stopped
+    mem_limit: 256m
+    mem_reservation: 128m
+    cpus: 0.5
+
+  catchall:
+    container_name: catchall
+    image: nginx:latest
+    networks:
+      - traefik
+    restart: unless-stopped
+    volumes:
+      - ./catchall:/usr/share/nginx/html:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.catchall.rule=Host(`dimoracosta.it`) || HostRegexp(`.+\.dimoracosta\.it`)
+      - traefik.http.routers.catchall.entrypoints=websecure
+      - traefik.http.routers.catchall.tls=true
+      - traefik.http.routers.catchall.tls.certResolver=cloudflare
+      - traefik.http.routers.catchall.priority=1
+      - traefik.http.routers.catchall.middlewares=crowdsec-bouncer@file,ratelimiter@file
+      - traefik.http.services.catchall.loadbalancer.server.port=80
+    mem_limit: 128m
+    mem_reservation: 64m
+    cpus: 0.25
+
+networks:
+  traefik:
+    external: true
+
+volumes:
+  logs:

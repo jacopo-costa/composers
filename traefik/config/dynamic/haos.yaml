@@ -1,0 +1,18 @@
+http:
+  routers:
+    haos:
+      rule: Host(`haos.dimoracosta.it`)
+      entrypoints:
+        - websecure
+      service: haos
+      middlewares:
+        - crowdsec-bouncer@file
+        - authentik@file
+      tls:
+        certresolver: cloudflare
+
+  services:
+    haos:
+      loadBalancer:
+        servers:
+          - url: http://192.168.100.3:8123
